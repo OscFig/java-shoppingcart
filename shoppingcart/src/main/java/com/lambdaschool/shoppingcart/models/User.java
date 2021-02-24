@@ -1,11 +1,16 @@
 package com.lambdaschool.shoppingcart.models;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonProperty;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
 import javax.persistence.*;
 import javax.validation.constraints.Email;
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 
 /**
@@ -93,101 +98,53 @@ public class User
         this.comments = comments;
     }
 
-    /**
-     * Getter for userid
-     *
-     * @return the userid (long) of the user
-     */
+
     public long getUserid()
     {
         return userid;
-    }
+    };
 
-    /**
-     * Setter for userid. Used primary for seeding data
-     *
-     * @param userid the new userid (long) of the user
-     */
     public void setUserid(long userid)
     {
         this.userid = userid;
     }
 
-    /**
-     * Getter for username
-     *
-     * @return the username (String) lowercase
-     */
-    public String getUsername()
-    {
-        return username;
-    }
+    public String getUsername() { return username; }
 
-    /**
-     * setter for username
-     *
-     * @param username the new username (String) converted to lowercase
-     */
     public void setUsername(String username)
     {
         this.username = username.toLowerCase();
     }
 
-    /**
-     * getter for primary email
-     *
-     * @return the primary email (String) for the user converted to lowercase
-     */
     public String getPrimaryemail()
     {
         return primaryemail;
     }
 
-    /**
-     * setter for primary email
-     *
-     * @param primaryemail the new primary email (String) for the user converted to lowercase
-     */
     public void setPrimaryemail(String primaryemail)
     {
         this.primaryemail = primaryemail.toLowerCase();
     }
 
-    /**
-     * Getter for the password
-     *
-     * @return the password (String) of the user
-     */
     public String getPassword()
     {
         return password;
     }
-
-    /**
-     * Setter for password
-     *
-     * @param password the new password (String) for the user
-     */
+// ------------------------------------------------------------------------------------------------------------
     public void setPassword(String password)
     {
+        BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+        this.password = passwordEncoder.encode(password);
+    }
+    public void setPasswordNoEncrypt(String password){
         this.password = password;
     }
-
-    /**
-     * Getter for user role combinations
-     *
-     * @return A list of user role combinations associated with this user
-     */
+// -------------------------------------------------------------------------------------------------------------
     public Set<UserRoles> getRoles()
     {
         return roles;
     }
 
-    /**
-     * Setter for user role combinations
-     *
-     * @param roles Change the list of user role combinations associated with this user to this one
-     */
     public void setRoles(Set<UserRoles> roles)
     {
         this.roles = roles;
@@ -211,5 +168,16 @@ public class User
     public void setCarts(Set<CartItem> carts)
     {
         this.carts = carts;
+    }
+
+    @JsonIgnore
+    public List<SimpleGrantedAuthority> getAuthority(){
+        List<SimpleGrantedAuthority> rtnList = new ArrayList<>();
+
+        for (UserRoles r : this.roles) {
+            String myRole = "ROLE_" + r.getRole().getName().toUpperCase();
+            rtnList.add(new SimpleGrantedAuthority(myRole));
+        }
+        return rtnList;
     }
 }
